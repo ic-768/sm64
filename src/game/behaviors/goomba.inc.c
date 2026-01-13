@@ -5,19 +5,78 @@
  * The triplet spawner comes before its spawned goombas in processing order.
  */
 
+extern struct MarioState *gMarioState; // Access to Mario's state for jump sync
+
+// Per-goomba jump detection to prevent shared state conflicts
+static u32 sMarioPrevAction = 0;
+
+// Forward declaration for function defined later
+static void goomba_begin_jump(void);
+
+/**
+ * Check if Mario just started jumping and trigger synchronized goomba jump
+ */
+static void check_and_sync_mario_jump(void) {
+    u32 currentAction;
+    
+    if (gMarioState == NULL) return;
+    
+    currentAction = gMarioState->action;
+    
+    // If Mario is airborne and this goomba is close enough, make it jump
+    // with matching direction and speed
+    if ((currentAction & ACT_FLAG_AIR) && o->oDistanceToMario < 3000.0f && o->oAction == GOOMBA_ACT_WALK) {
+// Give goomba a moderate boost to sync with Mario's height
+        o->oVelY = 25.0f * o->oGoombaScale; // Moderate jump height
+        
+        // Match Mario's jump direction and speed with better responsiveness
+        if (gMarioState->forwardVel > 0.1f) {
+            // Mario is moving forward - goomba jumps forward with matching speed
+            o->oForwardVel = gMarioState->forwardVel * 1.2f; // 120% of Mario's speed for catch-up
+        } else if (gMarioState->forwardVel < -0.1f) {
+            // Mario is moving backward - goomba jumps backward with matching speed
+            o->oForwardVel = gMarioState->forwardVel * 1.2f; // 120% speed for better tracking
+        } else {
+            // Mario is stationary - goomba jumps in place
+            o->oForwardVel = 0.0f;
+        }
+        
+        o->oAction = GOOMBA_ACT_JUMP;
+        // Face-> same direction as Mario
+        o->oGoombaTargetYaw = gMarioState->faceAngle[1];
+    }
+    
+    // Active collision avoidance - if Mario is walking toward this goomba, move aside
+    if (o->oAction == GOOMBA_ACT_WALK && !(currentAction & ACT_FLAG_AIR) && o->oDistanceToMario < 200.0f) {
+        // Check if Mario is moving toward this goomba
+        f32 marioToGoombaAngle = atan2s(o->oPosZ - gMarioState->pos[2], o->oPosX - gMarioState->pos[0]);
+        f32 angleDiff = abs_angle_diff(marioToGoombaAngle, gMarioState->faceAngle[1]);
+        
+        // If Mario is facing toward this goomba and is close, move perpendicularly away
+        if (angleDiff < 0x2000) { // Within 45 degrees
+            // Calculate perpendicular escape direction
+            f32 escapeAngle = marioToGoombaAngle + 0x4000; // 90 degrees
+            
+            // Move away at moderate speed
+            o->oForwardVel = 20.0f * o->oGoombaScale;
+            o->oGoombaTargetYaw = escapeAngle;
+        }
+    }
+}
+
 /**
  * Hitbox for goomba.
  */
 static struct ObjectHitbox sGoombaHitbox = {
-    /* interactType:      */ INTERACT_BOUNCE_TOP,
+    /* interactType:      */ INTERACT_POLE, // No collision with Mario
     /* downOffset:        */ 0,
-    /* damageOrCoinValue: */ 1,
+    /* damageOrCoinValue: */ 0, // No damage
     /* health:            */ 0,
     /* numLootCoins:      */ 1,
-    /* radius:            */ 72,
-    /* height:            */ 50,
-    /* hurtboxRadius:     */ 42,
-    /* hurtboxHeight:     */ 40,
+    /* radius:            */ 30, // Small radius for goomba-to-goomba collision
+    /* height:            */ 30,
+    /* hurtboxRadius:     */ 30, // Small hurtbox for goomba collision
+    /* hurtboxHeight:     */ 30, // Small hurtbox for goomba collision
 };
 
 /**
@@ -146,29 +205,55 @@ static void mark_goomba_as_dead(void) {
 }
 
 /**
- * Walk around randomly occasionally jumping. If mario comes within range,
- * chase him.
+ * Follow Mario around, stopping when close to him.
  */
 static void goomba_act_walk(void) {
-    // Always chase Mario at 4x speed, regardless of distance
+    f32 followDistance = 150.0f; // Distance at which goomba stops following
+    f32 stopDistance = 200.0f;   // Distance at which goomba starts moving again
+    
     o->oGoombaTargetYaw = o->oAngleToMario;
-    o->oGoombaRelativeSpeed = 80.0f; // 4x the original chase speed (20.0f * 4)
 
-    // Set forward velocity instantly (no ramping up)
-    o->oForwardVel = o->oGoombaRelativeSpeed * o->oGoombaScale;
-
-    // Always play footstep sounds since we're always running fast
-    cur_obj_play_sound_at_anim_range(2, 17, SOUND_OBJ_GOOMBA_WALK);
-
-    // Handle collision and turning
-    if (o->oGoombaTurningAwayFromWall) {
-        o->oGoombaTurningAwayFromWall = obj_resolve_collisions_and_turn(o->oGoombaTargetYaw, 0x2000);
-    } else {
-        if (!(o->oGoombaTurningAwayFromWall =
-                  obj_bounce_off_walls_edges_objects(&o->oGoombaTargetYaw))) {
-            // Only turn toward Mario if not blocked by walls/edges - extremely precise turning
-            cur_obj_rotate_yaw_toward(o->oGoombaTargetYaw, 0x4000);
+    // Check distance to Mario and adjust behavior
+    if (o->oDistanceToMario < followDistance) {
+        // Close to Mario - stop and wait
+        o->oGoombaRelativeSpeed = 0.0f;
+        o->oForwardVel = 0.0f;
+        
+        // Face Mario while waiting
+        cur_obj_rotate_yaw_toward(o->oGoombaTargetYaw, 0x2000);
+    } else if (o->oDistanceToMario < stopDistance) {
+        // Medium distance - slow down for gentle approach
+        f32 speedFactor = (o->oDistanceToMario - followDistance) / (stopDistance - followDistance);
+        o->oGoombaRelativeSpeed = 40.0f * speedFactor; // Variable speed up to 40
+        o->oForwardVel = o->oGoombaRelativeSpeed * o->oGoombaScale;
+        
+        // Still turn toward Mario
+        cur_obj_rotate_yaw_toward(o->oGoombaTargetYaw, 0x2000);
+        
+        // Only play footstep sounds when actually moving
+        if (o->oForwardVel > 1.0f) {
+            cur_obj_play_sound_at_anim_range(2, 17, SOUND_OBJ_GOOMBA_WALK);
         }
+    } else {
+        // Far from Mario - chase at normal speed
+        o->oGoombaRelativeSpeed = 40.0f; // Moderate follow speed
+        o->oForwardVel = o->oGoombaRelativeSpeed * o->oGoombaScale;
+
+        // Play footstep sounds when moving
+        cur_obj_play_sound_at_anim_range(2, 17, SOUND_OBJ_GOOMBA_WALK);
+    }
+
+    // Handle collision and turning only when moving
+    if (o->oForwardVel > 0.0f) {
+        if (o->oGoombaTurningAwayFromWall) {
+            o->oGoombaTurningAwayFromWall = obj_resolve_collisions_and_turn(o->oGoombaTargetYaw, 0x2000);
+        } else {
+            if (!(o->oGoombaTurningAwayFromWall =
+                      obj_bounce_off_walls_edges_objects(&o->oGoombaTargetYaw))) {
+                // Turn toward Mario with moderate precision when moving
+                cur_obj_rotate_yaw_toward(o->oGoombaTargetYaw, 0x2000);
+}
+}
     }
 }
 
@@ -245,6 +330,9 @@ void bhv_goomba_update(void) {
         }
 
         cur_obj_init_animation_with_accel_and_sound(0, animSpeed);
+
+        // Check for Mario jump synchronization
+        check_and_sync_mario_jump();
 
         switch (o->oAction) {
             case GOOMBA_ACT_WALK:

@@ -5,13 +5,14 @@ This document provides essential information for AI agents working with the Supe
 ## Build Commands
 
 ### Primary Build Commands
+
 ```bash
 # Build default version (US) with 4 parallel jobs
 make -j4
 
 # Build specific version
 make VERSION=us -j4    # North America
-make VERSION=jp -j4    # Japan  
+make VERSION=jp -j4    # Japan
 make VERSION=eu -j4    # Europe
 make VERSION=sh -j4    # Shindou (Japan, rumble support)
 make VERSION=cn -j4    # iQue Player (China)
@@ -25,15 +26,13 @@ make NON_MATCHING=1 -j4
 # Clean build
 make clean
 
-# Test ROM (runs in emulator if configured)
-make test
-
 # Format code
 ./format.sh                    # Format all files
 ./format.sh file.c file2.c      # Format specific files
 ```
 
 ### Build Options
+
 - `VERSION`: jp/us/eu/sh/cn (default: us)
 - `COMPARE`: 1/0 (default: 1) - Compare ROM hash with original
 - `NON_MATCHING`: Use functionally equivalent C implementations
@@ -43,6 +42,7 @@ make test
 ## Code Style Guidelines
 
 ### Formatting (clang-format)
+
 - Indent width: 4 spaces
 - Column limit: 104 characters
 - Pointer alignment: Right (`int *ptr` not `int* ptr`)
@@ -51,6 +51,7 @@ make test
 - Sort includes: false (preserve order)
 
 ### Naming Conventions
+
 - **Functions**: `snake_case` (e.g., `goomba_act_walk`)
 - **Variables**: `snake_case` (e.g., `oGoombaRelativeSpeed`)
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `GOOMBA_ACT_WALK`)
@@ -59,6 +60,7 @@ make test
 - **File names**: `snake_case.c` for source, `snake_case.h` for headers
 
 ### Type System
+
 - **Fixed-width types**: Use N64 types (`s32`, `u32`, `f32`, etc.)
 - **Boolean**: Use `TRUE`/`FALSE` or `1`/`0`
 - **Common types**:
@@ -70,6 +72,7 @@ make test
   - `f32` - 32-bit float
 
 ### Include Order
+
 1. System headers (`#include <ultra64.h>`)
 2. Project headers (alphabetical)
 3. Local headers (quotes, alphabetical)
@@ -84,6 +87,7 @@ make test
 ```
 
 ### Function Documentation
+
 Use doxygen-style comments for functions and structures:
 
 ```c
@@ -106,12 +110,14 @@ static struct ObjectHitbox sGoombaHitbox = {
 ```
 
 ### Error Handling
+
 - Use `ASSERT` for critical conditions
 - Return appropriate error codes from functions
 - Check pointer validity before dereferencing
 - Use `STATIC_ASSERT` for compile-time checks
 
 ### Memory Management
+
 - Use `alloc_*` functions for dynamic allocation
 - Always pair with appropriate `free_*` functions
 - Check return values for NULL
@@ -120,33 +126,39 @@ static struct ObjectHitbox sGoombaHitbox = {
 ### Game-Specific Patterns
 
 #### Object Behaviors
+
 - Behavior files use `.inc.c` extension
 - Use `bhv_` prefix for behavior functions
 - Object fields accessed via `o->oFieldName`
 - Common pattern: switch on `o->oAction`
 
 #### Level Scripts
+
 - Level commands use specific macros
 - Follow existing level structure in `levels/` directory
 - Each level has `header.h`, `geo.c`, `leveldata.c`, etc.
 
 #### Actors
+
 - Actor behaviors in `src/game/behaviors/`
 - Actor data in `actors/` directory
 - Group headers for related actors
 
 ### Constants and Magic Numbers
+
 - Define named constants for repeated values
 - Use existing constants from header files
 - Fractional values use `f32` notation (e.g., `4.0f / 3.0f`)
 
 ### Testing and Verification
+
 - Build with `COMPARE=0` for modifications
 - Test with multiple ROM versions if applicable
 - Verify game logic changes don't break existing functionality
-- Use emulator testing via `make test`
+- NEVER use emulator testing via `make test`
 
 ### Common Pitfalls
+
 - Don't exceed 104 character line limit
 - Maintain N64 alignment requirements (8-byte for DMA)
 - Avoid undefined behavior (use `NON_MATCHING=1` if necessary)
@@ -154,6 +166,7 @@ static struct ObjectHitbox sGoombaHitbox = {
 - Preserve existing data structures and interfaces
 
 ### File Organization
+
 ```
 src/
 ├── game/           # Game logic, behaviors, etc.
@@ -170,3 +183,4 @@ enhancements/       # Example modifications
 ```
 
 When making changes, always run `./format.sh` before committing to ensure code style compliance.
+

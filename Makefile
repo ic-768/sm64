@@ -440,7 +440,6 @@ else
 endif
 ENDIAN_BITWIDTH       := $(BUILD_DIR)/endian-and-bitwidth
 EMULATOR = mupen64plus
-EMU_FLAGS = --noosd
 LOADER = loader64
 LOADER_FLAGS = -vwf
 SHA1SUM = sha1sum
@@ -485,6 +484,8 @@ distclean: clean
 	$(PYTHON) extract_assets.py --clean
 	$(MAKE) -C $(TOOLS_DIR) clean
 	$(MAKE) -C $(TOOLS_DIR)/sm64tools clean
+
+EMU_FLAGS = --gfx mupen64plus-video-glide64mk2.so --set "Audio-SDL[VOLUME_DEFAULT]=0"
 
 test: $(ROM)
 	$(EMULATOR) $(EMU_FLAGS) $<
