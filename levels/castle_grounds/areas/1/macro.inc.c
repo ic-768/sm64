@@ -17,5 +17,8 @@ const MacroObject castle_grounds_seg7_macro_objs[] = {
     MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_cannon_open,                /*yaw*/   0, /*pos*/  2384,    70,  1961, /*bhvParam*/ 0x40),
     MACRO_OBJECT               (/*preset*/ macro_butterfly_triplet_no_bombs, /*yaw*/   0, /*pos*/ -6240,   295,   320),
     MACRO_OBJECT               (/*preset*/ macro_butterfly_triplet_no_bombs, /*yaw*/   0, /*pos*/  6330,   710, -3760),
+    MACRO_OBJECT               (/*preset*/ macro_goomba,                    /*yaw*/   0, /*pos*/ -1828,   260,  4664),
+    MACRO_OBJECT               (/*preset*/ macro_goomba,                    /*yaw*/   0, /*pos*/ -1028,   260,  4664),
+    MACRO_OBJECT               (/*preset*/ macro_goomba,                    /*yaw*/   0, /*pos*/ -1428,   260,  4664),
     MACRO_OBJECT_END(),
 };
