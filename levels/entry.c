@@ -3,7 +3,18 @@
 #include "segment_symbols.h"
 #include "level_commands.h"
 
+#include "game/area.h"
+#include "game/level_update.h"
+
 #include "levels/intro/header.h"
+#include "levels/castle_grounds/header.h"
+#include "levels/scripts.h"
+#include "levels/menu/header.h"
+
+#include "actors/common1.h"
+#include "actors/group0.h"
+#include "actors/group10.h"
+#include "actors/group15.h"
 
 #include "make_const_nonconst.h"
 
@@ -12,6 +23,6 @@ const LevelScript level_script_entry[] = {
     SLEEP(/*frames*/ 2),
     BLACKOUT(/*active*/ FALSE),
     SET_REG(/*value*/ 0),
-    EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_intro_splash_screen),
+    EXECUTE(/*seg*/ 0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_splash_screen),
     JUMP(/*target*/ level_script_entry),
 };

@@ -40,7 +40,9 @@ const LevelScript level_intro_splash_screen[] = {
     CMD2A(/*unk2*/ 1),
     CLEAR_LEVEL(),
     SLEEP(/*frames*/ 2),
-    EXIT_AND_EXECUTE(/*seg*/ 0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_mario_head_regular),
+    // Skip Mario head intro, go directly to main scripts with castle grounds
+    SET_REG(/*value*/ LEVEL_CASTLE_GROUNDS),
+    EXIT_AND_EXECUTE(/*seg*/ 0x15, _scriptsSegmentRomStart, _scriptsSegmentRomEnd, level_main_scripts_entry),
 };
 
 const LevelScript level_intro_mario_head_regular[] = {
