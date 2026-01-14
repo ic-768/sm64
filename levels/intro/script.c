@@ -19,28 +19,7 @@
 #include "levels/intro/header.h"
 
 const LevelScript level_intro_splash_screen[] = {
-    INIT_LEVEL(),
-    FIXED_LOAD(/*loadAddr*/ _goddardSegmentStart, /*romStart*/ _goddardSegmentRomStart, /*romEnd*/ _goddardSegmentRomEnd),
-    LOAD_RAW (/*seg*/ 0x13, _behaviorSegmentRomStart, _behaviorSegmentRomEnd),
-    LOAD_MIO0(/*seg*/ 0x07, _intro_segment_7SegmentRomStart, _intro_segment_7SegmentRomEnd),
-
-    // Load "Super Mario 64" logo
-    ALLOC_LEVEL_POOL(),
-    AREA(/*index*/ 1, intro_geo_0002D0),
-    END_AREA(),
-    FREE_LEVEL_POOL(),
-
-    // Start animation
-    LOAD_AREA(/*area*/ 1),
-
-    CALL(/*arg*/ LVL_INTRO_PLAY_ITS_A_ME_MARIO, /*func*/ lvl_intro_update),
-    SLEEP(/*frames*/ 75),
-    TRANSITION(/*transType*/ WARP_TRANSITION_FADE_INTO_COLOR, /*time*/ 16, /*color*/ 0x00, 0x00, 0x00),
-    SLEEP(/*frames*/ 16),
-    CMD2A(/*unk2*/ 1),
-    CLEAR_LEVEL(),
-    SLEEP(/*frames*/ 2),
-    // Skip Mario head intro, go directly to main scripts with castle grounds
+    // Skip logo entirely, go directly to main scripts
     SET_REG(/*value*/ LEVEL_CASTLE_GROUNDS),
     EXIT_AND_EXECUTE(/*seg*/ 0x15, _scriptsSegmentRomStart, _scriptsSegmentRomEnd, level_main_scripts_entry),
 };
