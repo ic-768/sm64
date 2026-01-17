@@ -1193,36 +1193,77 @@ s32 set_water_plunge_action(struct MarioState *m) {
 }
 
 /**
- * These are the scaling values for the x and z axis for Mario
+ * These are the scaling values for x and z axis for Mario
  * when he is close to unsquishing.
  */
 u8 sSquishScaleOverTime[16] = { 0x46, 0x32, 0x32, 0x3C, 0x46, 0x50, 0x50, 0x3C,
-                                0x28, 0x14, 0x14, 0x1E, 0x32, 0x3C, 0x3C, 0x28 };
+                                 0x28, 0x14, 0x14, 0x1E, 0x32, 0x3C, 0x3C, 0x28 };
+
+// Track Mario's growth scale (base scale before squish)
+static f32 sGrowthScale = 0.25f;
 
 /**
  * Applies the squish to Mario's model via scaling.
  */
 void squish_mario_model(struct MarioState *m) {
     if (m->squishTimer != 0xFF) {
-        // If no longer squished, scale back to default.
+        // If no longer squished, scale back to growth scale (not 1.0f)
         if (m->squishTimer == 0) {
-            vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
+            vec3f_set(m->marioObj->header.gfx.scale, sGrowthScale, sGrowthScale, sGrowthScale);
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
         else if (m->squishTimer <= 16) {
-            m->squishTimer -= 1;
+            m->squishTimer -= 1; 
 
             m->marioObj->header.gfx.scale[1] =
                 1.0f - ((sSquishScaleOverTime[15 - m->squishTimer] * 0.6f) / 100.0f);
+
             m->marioObj->header.gfx.scale[0] =
                 ((sSquishScaleOverTime[15 - m->squishTimer] * 0.4f) / 100.0f) + 1.0f;
 
             m->marioObj->header.gfx.scale[2] = m->marioObj->header.gfx.scale[0];
         } else {
-            m->squishTimer -= 1;
+            m->squishTimer -= 1; 
 
             vec3f_set(m->marioObj->header.gfx.scale, 1.4f, 0.4f, 1.4f);
         }
+    }
+}
+
+#define GROWTH_INTERVAL_FRAMES 300  // 5 seconds at 60fps
+#define GROWTH_INCREMENT     0.25f
+#define GROWTH_MAX           8.0f
+
+void update_mario_growth(struct MarioState *m) {
+    f32 newScale;
+
+    // Safety check: only run if Mario object exists
+    if (m->marioObj == NULL) {
+        return;
+    }
+
+    if (m->marioObj->header.gfx.scale[0] >= GROWTH_MAX) {
+        return;
+    }
+
+    m->growthTimer++;
+
+    if (m->growthTimer >= GROWTH_INTERVAL_FRAMES) {
+        m->growthTimer = 0;
+
+        newScale = m->marioObj->header.gfx.scale[0] + GROWTH_INCREMENT;
+        if (newScale > GROWTH_MAX) {
+            newScale = GROWTH_MAX;
+        }
+
+        vec3f_set(m->marioObj->header.gfx.scale, newScale, newScale, newScale);
+        
+        // Update tracked growth scale
+        sGrowthScale = newScale;
+        
+        // Visual and audio feedback for growth
+        m->particleFlags |= PARTICLE_SPARKLES;
+        play_sound(SOUND_GENERAL_COIN, gGlobalSoundSource);
     }
 }
 
@@ -1746,8 +1787,9 @@ s32 execute_mario_action(UNUSED struct Object *o) {
             }
         }
 
-        sink_mario_in_quicksand(gMarioState);
-        squish_mario_model(gMarioState);
+    sink_mario_in_quicksand(gMarioState);
+    squish_mario_model(gMarioState);
+    update_mario_growth(gMarioState);
         set_submerged_cam_preset_and_spawn_bubbles(gMarioState);
         update_mario_health(gMarioState);
         update_mario_info_for_cam(gMarioState);
@@ -1808,16 +1850,22 @@ void init_mario(void) {
     gMarioState->forwardVel = 0.0f;
     gMarioState->squishTimer = 0;
 
+    // Only reset growth timer and scale on fresh game start (0 stars)
+    // Save file loads preserve growth (numStars > 0)
+    if (gMarioState->action == ACT_UNINITIALIZED && gMarioState->numStars == 0) {
+        gMarioState->growthTimer = 0;
+        sGrowthScale = 0.25f;  // Reset tracked growth scale
+        vec3f_set(gMarioState->marioObj->header.gfx.scale, 0.25f, 0.25f, 0.25f);
+    }
+
+    gMarioState->hurtCounter = 0;
     gMarioState->hurtCounter = 0;
     gMarioState->healCounter = 0;
-
     gMarioState->capTimer = 0;
     gMarioState->quicksandDepth = 0.0f;
-
     gMarioState->heldObj = NULL;
     gMarioState->riddenObj = NULL;
     gMarioState->usedObj = NULL;
-
     gMarioState->waterLevel =
         find_water_level(gMarioSpawnInfo->startPos[0], gMarioSpawnInfo->startPos[2]);
 

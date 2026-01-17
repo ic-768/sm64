@@ -313,6 +313,7 @@ struct MarioState {
     /*0xBC*/ f32 peakHeight;
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 gettingBlownGravity;
+    /*0xC8*/ u16 growthTimer;
 };
 
 #endif // TYPES_H
