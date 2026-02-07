@@ -3,6 +3,7 @@
 #include "sm64.h"
 #include "area.h"
 #include "audio/external.h"
+#include "behavior_data.h"
 #include "camera.h"
 #include "engine/graph_node.h"
 #include "engine/math_util.h"
@@ -11,8 +12,11 @@
 #include "level_update.h"
 #include "mario.h"
 #include "mario_step.h"
+#include "object_list_processor.h"
+#include "object_helpers.h"
 #include "save_file.h"
 #include "rumble_init.h"
+#include "sound_init.h"
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
     s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
@@ -450,6 +454,19 @@ s32 act_jump(struct MarioState *m) {
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    // Auto-ride turtle shell when jumping
+    if (!(m->action & ACT_FLAG_RIDING_SHELL)) {
+        struct Object *shell = spawn_object(gCurrentObject, MODEL_KOOPA_SHELL, bhvKoopaShell);
+        if (shell) {
+            m->interactObj = shell;
+            m->usedObj = shell;
+            m->riddenObj = shell;
+            mario_drop_held_object(m);
+            play_shell_music();
+            return set_mario_action(m, ACT_RIDING_SHELL_JUMP, 0);
+        }
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
