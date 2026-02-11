@@ -1574,7 +1574,10 @@ u32 update_and_return_cap_flags(struct MarioState *m) {
         if ((m->capTimer <= 60)
             || ((action != ACT_READING_AUTOMATIC_DIALOG) && (action != ACT_READING_NPC_DIALOG)
                 && (action != ACT_READING_SIGN) && (action != ACT_IN_CANNON))) {
-            m->capTimer -= 1;
+            // Perpetual wingcap - don't decrement timer when wingcap is active
+            if (!(m->flags & MARIO_WING_CAP)) {
+                m->capTimer -= 1;
+            }
         }
 
         if (m->capTimer == 0) {
@@ -1797,13 +1800,8 @@ void init_mario(void) {
 
     gMarioState->invincTimer = 0;
 
-    if (save_file_get_flags()
-        & (SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI
-           | SAVE_FLAG_CAP_ON_MR_BLIZZARD)) {
-        gMarioState->flags = 0;
-    } else {
-        gMarioState->flags = (MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD);
-    }
+    gMarioState->flags = (MARIO_METAL_CAP | MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD | MARIO_WING_CAP);
+    gMarioState->capTimer = 1;  // Perpetual wingcap
 
     gMarioState->forwardVel = 0.0f;
     gMarioState->squishTimer = 0;
@@ -1811,7 +1809,7 @@ void init_mario(void) {
     gMarioState->hurtCounter = 0;
     gMarioState->healCounter = 0;
 
-    gMarioState->capTimer = 0;
+    gMarioState->capTimer = 1;  // Perpetual wingcap
     gMarioState->quicksandDepth = 0.0f;
 
     gMarioState->heldObj = NULL;
@@ -1870,7 +1868,8 @@ void init_mario(void) {
 
 void init_mario_from_save_file(void) {
     gMarioState->unk00 = 0;
-    gMarioState->flags = 0;
+    gMarioState->flags = MARIO_METAL_CAP | MARIO_WING_CAP | MARIO_CAP_ON_HEAD;
+    gMarioState->capTimer = 1;
     gMarioState->action = 0;
     gMarioState->spawnInfo = &gPlayerSpawnInfos[0];
     gMarioState->statusForCamera = &gPlayerCameraState[0];
