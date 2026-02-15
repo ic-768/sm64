@@ -458,7 +458,7 @@ s32 act_jump(struct MarioState *m) {
 
     // Auto-ride turtle shell when jumping
     if (!(m->action & ACT_FLAG_RIDING_SHELL)) {
-        struct Object *shell = spawn_object(gCurrentObject, MODEL_KOOPA_SHELL, bhvKoopaShell);
+        struct Object *shell = spawn_object(m->marioObj, MODEL_YELLOW_COIN, bhvKoopaShell);
         if (shell) {
             m->interactObj = shell;
             m->usedObj = shell;
