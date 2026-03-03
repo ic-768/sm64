@@ -1271,6 +1271,13 @@ void update_mario_button_inputs(struct MarioState *m) {
 
         if (m->controller->buttonPressed & Z_TRIG) {
             m->input |= INPUT_Z_PRESSED;
+            {
+                f32 spawnX = gMarioState->pos[0] + sins(gMarioState->faceAngle[1]) * 100.0f;
+                f32 spawnY = gMarioState->pos[1];
+                f32 spawnZ = gMarioState->pos[2] + coss(gMarioState->faceAngle[1]) * 100.0f;
+                spawn_object_abs_with_rot(gMarioState->marioObj, 0, MODEL_CANNON_BASE, bhvCannon,
+                    spawnX, spawnY, spawnZ, 0, gMarioState->faceAngle[1], 0);
+            }
         }
     }
 
