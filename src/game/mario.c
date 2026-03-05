@@ -1295,9 +1295,9 @@ void update_mario_joystick_inputs(struct MarioState *m) {
     f32 mag = ((controller->stickMag / 64.0f) * (controller->stickMag / 64.0f)) * 64.0f;
 
     if (m->squishTimer == 0) {
-        m->intendedMag = mag / 2.0f;
+        m->intendedMag = mag / 1.5f;
     } else {
-        m->intendedMag = mag / 8.0f;
+        m->intendedMag = mag / 6.0f;
     }
 
     if (m->intendedMag > 0.0f) {

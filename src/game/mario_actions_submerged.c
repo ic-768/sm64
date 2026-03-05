@@ -1124,8 +1124,8 @@ static void update_metal_water_walking_speed(struct MarioState *m) {
         m->forwardVel -= 1.0f;
     }
 
-    if (m->forwardVel > 32.0f) {
-        m->forwardVel = 32.0f;
+    if (m->forwardVel > 48.0f) {
+        m->forwardVel = 48.0f;
     }
 
     m->faceAngle[1] =

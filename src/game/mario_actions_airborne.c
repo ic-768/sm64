@@ -161,12 +161,12 @@ s32 check_horizontal_wind(struct MarioState *m) {
 
         speed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
-        if (speed > 48.0f) {
-            m->slideVelX = m->slideVelX * 48.0f / speed;
-            m->slideVelZ = m->slideVelZ * 48.0f / speed;
-            speed = 32.0f; //! This was meant to be 48?
-        } else if (speed > 32.0f) {
-            speed = 32.0f;
+        if (speed > 72.0f) {
+            m->slideVelX = m->slideVelX * 72.0f / speed;
+            m->slideVelZ = m->slideVelZ * 72.0f / speed;
+            speed = 48.0f; //! This was meant to be 48?
+        } else if (speed > 48.0f) {
+            speed = 48.0f;
         }
 
         m->vel[0] = m->slideVelX;
@@ -189,7 +189,7 @@ void update_air_with_turn(struct MarioState *m) {
     f32 intendedMag;
 
     if (!check_horizontal_wind(m)) {
-        dragThreshold = m->action == ACT_LONG_JUMP ? 48.0f : 32.0f;
+        dragThreshold = m->action == ACT_LONG_JUMP ? 72.0f : 48.0f;
         m->forwardVel = approach_f32(m->forwardVel, 0.0f, 0.35f, 0.35f);
 
         if (m->input & INPUT_NONZERO_ANALOG) {
@@ -220,7 +220,7 @@ void update_air_without_turn(struct MarioState *m) {
     f32 intendedMag;
 
     if (!check_horizontal_wind(m)) {
-        dragThreshold = m->action == ACT_LONG_JUMP ? 48.0f : 32.0f;
+        dragThreshold = m->action == ACT_LONG_JUMP ? 72.0f : 48.0f;
         m->forwardVel = approach_f32(m->forwardVel, 0.0f, 0.35f, 0.35f);
 
         if (m->input & INPUT_NONZERO_ANALOG) {
@@ -266,7 +266,7 @@ void update_lava_boost_or_twirling(struct MarioState *m) {
             m->forwardVel *= -1.0f;
         }
 
-        if (m->forwardVel > 32.0f) {
+        if (m->forwardVel > 48.0f) {
             m->forwardVel -= 2.0f;
         }
     }
@@ -344,9 +344,9 @@ void update_flying(struct MarioState *m) {
     }
 
     if (m->forwardVel > 16.0f) {
-        m->faceAngle[0] += (m->forwardVel - 32.0f) * 6.0f;
+        m->faceAngle[0] += (m->forwardVel - 48.0f) * 6.0f;
     } else if (m->forwardVel > 4.0f) {
-        m->faceAngle[0] += (m->forwardVel - 32.0f) * 10.0f;
+        m->faceAngle[0] += (m->forwardVel - 48.0f) * 10.0f;
     } else {
         m->faceAngle[0] -= 0x400;
     }

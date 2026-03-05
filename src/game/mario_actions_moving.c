@@ -436,9 +436,9 @@ void update_walking_speed(struct MarioState *m) {
     f32 targetSpeed;
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
-        maxTargetSpeed = 24.0f;
+        maxTargetSpeed = 36.0f;
     } else {
-        maxTargetSpeed = 32.0f;
+        maxTargetSpeed = 48.0f;
     }
 
     targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
@@ -448,15 +448,15 @@ void update_walking_speed(struct MarioState *m) {
     }
 
     if (m->forwardVel <= 0.0f) {
-        m->forwardVel += 1.1f;
+        m->forwardVel += 1.65f;
     } else if (m->forwardVel <= targetSpeed) {
-        m->forwardVel += 1.1f - m->forwardVel / 43.0f;
+        m->forwardVel += 1.65f - m->forwardVel / 65.0f;
     } else if (m->floor->normal.y >= 0.95f) {
-        m->forwardVel -= 1.0f;
+        m->forwardVel -= 1.5f;
     }
 
-    if (m->forwardVel > 48.0f) {
-        m->forwardVel = 48.0f;
+    if (m->forwardVel > 72.0f) {
+        m->forwardVel = 72.0f;
     }
 
     m->faceAngle[1] =
@@ -1602,11 +1602,11 @@ s32 common_ground_knockback_action(struct MarioState *m, s32 animation, s32 arg2
 #endif
     }
 
-    if (m->forwardVel > 32.0f) {
-        m->forwardVel = 32.0f;
+    if (m->forwardVel > 48.0f) {
+        m->forwardVel = 48.0f;
     }
-    if (m->forwardVel < -32.0f) {
-        m->forwardVel = -32.0f;
+    if (m->forwardVel < -48.0f) {
+        m->forwardVel = -48.0f;
     }
 
     animFrame = set_mario_animation(m, animation);
